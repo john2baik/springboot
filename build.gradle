@@ -13,10 +13,28 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'io.spring.dependency-management'
+apply plugin: 'org.springframework.boot'
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = 1.8
+
+task fatJar(type: Jar){
+	manifest {
+		attributes 'Implementation-Title': 'Gradle Jar File Example',
+				'Implementation-Version': version,
+				'Main-Class': 'com.example.springbootdockdoor'
+	}
+	baseName = project.name + '-all'
+	from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+	with jar
+}
+
+bootJar {
+	baseName = 'gs-spring-boot'
+	version =  '0.1.0'
+}
+
 
 repositories {
 	mavenCentral()
