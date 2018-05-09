@@ -11,4 +11,6 @@ public interface DoorService {
     Door create(Door door);
 
     String delete(String id);
+
+    Door getDoor(String id);
 }

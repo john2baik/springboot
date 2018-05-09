@@ -2,31 +2,24 @@ package com.example.springbootdockdoor.service;
 
 import com.example.springbootdockdoor.model.Door;
 import com.google.cloud.spanner.*;
-import com.google.common.collect.ImmutableList;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
-@Component
+@Service
 public class DoorServiceImpl implements DoorService {
 
-
+    @Autowired
+    SpannerService spannerService;
 
     public List<Door> getAllDoors(){
         List<Door> doors = new ArrayList<>();
-        SpannerOptions options = SpannerOptions.newBuilder().build();
-        Spanner spanner = options.getService();
-
-
-        // Creates a database client
-        DatabaseClient dbClient = spanner.getDatabaseClient(DatabaseId.of(
-                "dock-doors", "test-spanner", "test-database"));
+        DatabaseClient dbClient = spannerService.getDatabaseClient();
         ResultSet resultSet = dbClient.singleUse().executeQuery(Statement.of("SELECT * FROM Door"));
 
-        System.out.println("\n\nResults:");
-        // Prints the results
         while (resultSet.next()) {
             doors.add(new Door(resultSet.getString(0), resultSet.getString(1)));
         }
@@ -38,14 +31,7 @@ public class DoorServiceImpl implements DoorService {
         String id = door.getId();
         String name = door.getName();
         System.out.println(id + " : " + name);
-        SpannerOptions options = SpannerOptions.newBuilder().build();
-        Spanner spanner = options.getService();
-
-
-        // Creates a database client
-        DatabaseClient dbClient = spanner.getDatabaseClient(DatabaseId.of(
-                "dock-doors", "test-spanner", "test-database"));
-
+        DatabaseClient dbClient = spannerService.getDatabaseClient();
        List<Mutation> mutation = new ArrayList<>();
 
        mutation.add(
@@ -63,22 +49,25 @@ public class DoorServiceImpl implements DoorService {
     }
 
     public String delete( String id){
-        System.out.println(id + "= ID");
-        SpannerOptions options = SpannerOptions.newBuilder().build();
-        Spanner spanner = options.getService();
+        DatabaseClient dbClient = spannerService.getDatabaseClient();
+        try{
+            dbClient.writeAtLeastOnce(Arrays.asList(Mutation.delete("Door", Key.of(id))));
+            return "Success";
+        } catch (Exception e){
+            return "Error on delete";
+        }
 
-        // Creates a database client
-        DatabaseClient dbClient = spanner.getDatabaseClient(DatabaseId.of(
-                "dock-doors", "test-spanner", "test-database"));
+    }
 
-        List<Mutation> mutation = new ArrayList<>();
-
-        mutation.add(
-                Mutation.delete("Door", KeySet.singleKey(Key.newBuilder().append(id).build())));
-
-
-        dbClient.write(mutation);
-        return "Success";
+    public Door getDoor(String id){
+        System.out.println("ID for getDoor is : " + id);
+        DatabaseClient dbClient = spannerService.getDatabaseClient();
+        ResultSet resultSet = dbClient.singleUse().executeQuery(Statement.of("SELECT * FROM Door WHERE id = '" + id + "'"));
+        Door door = new Door();
+        while(resultSet.next()){
+            door = new Door(resultSet.getString("id"), resultSet.getString("name"));
+        }
+        return door;
     }
 
 }
