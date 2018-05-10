@@ -13,4 +13,6 @@ public interface DoorService {
     String delete(String id);
 
     Door getDoor(String id);
+
+    List<Door> sort(List<Door> doorList);
 }

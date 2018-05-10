@@ -5,15 +5,14 @@ import com.google.cloud.spanner.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class DoorServiceImpl implements DoorService {
 
     @Autowired
     SpannerService spannerService;
+
 
     public List<Door> getAllDoors(){
         List<Door> doors = new ArrayList<>();
@@ -23,7 +22,10 @@ public class DoorServiceImpl implements DoorService {
         while (resultSet.next()) {
             doors.add(new Door(resultSet.getString(0), resultSet.getString(1)));
         }
-        return doors;
+
+        List<Door> doorList = sort(doors);
+
+        return doorList;
 
     }
 
@@ -68,6 +70,16 @@ public class DoorServiceImpl implements DoorService {
             door = new Door(resultSet.getString("id"), resultSet.getString("name"));
         }
         return door;
+    }
+
+    public List<Door> sort(List<Door> doors){
+        Collections.sort(doors, new Comparator<Door>() {
+            @Override
+            public int compare(Door o1, Door o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+        return doors;
     }
 
 }
